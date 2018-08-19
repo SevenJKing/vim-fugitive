@@ -40,7 +40,7 @@ function! s:Uniq(list) abort
 endfunction
 
 function! s:winshell() abort
-  return &shell =~? 'cmd' || exists('+shellslash') && !&shellslash
+  return exists('+shellslash') && !&shellslash && &shellcmdflag !~# '^-'
 endfunction
 
 function! s:shellesc(arg) abort
@@ -64,7 +64,7 @@ endfunction
 function! s:tempname() abort
   let temp = resolve(tempname())
   if has('win32')
-    let temp = fnamemodify(fnamemodify(temp, ':h'), ':p').fnamemodify(temp, ':t')
+    let temp = fnamemodify(temp, ':p:h') . matchstr(temp, '[\/]') . fnamemodify(temp, ':t')
   endif
   return temp
 endfunction
@@ -1174,7 +1174,7 @@ function! s:ReplaceCmd(cmd) abort
     catch /^Vim\%((\a\+)\)\=:E302:/
     endtry
     call delete(tmp)
-    if fnamemodify(bufname('$'), ':p') ==# tmp
+    if s:cpath(fnamemodify(bufname('$'), ':p'), tmp)
       silent execute 'bwipeout '.bufnr('$')
     endif
     silent exe 'doau BufReadPost '.s:fnameescape(fn)
